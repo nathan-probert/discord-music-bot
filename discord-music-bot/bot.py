@@ -2,6 +2,8 @@ from random import randint
 import discord
 from discord.ext import commands
 import os
+
+from requests import get
 import functions
 
 # get token for bot
@@ -104,9 +106,10 @@ async def tictactoe(ctx, p2 : discord.Member):
     
 
 @client.command()
-async def play(ctx, songname):
-        await functions.join(ctx)
-    
+async def play(ctx, *, songname):
+    await functions.join(ctx)
+    await functions.queueSong(ctx, songname)
+    functions.playSong(ctx)
     
 
 # add tic tac toe
