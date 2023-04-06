@@ -1,9 +1,12 @@
 from random import randint
 import discord
 from discord.ext import commands
+import os
+import functions
 
 # get token for bot
-file1 = open("discord-music-bot\\lib\\secret.txt", 'r')
+print(os.getcwd())
+file1 = open("discord-music-bot\\secret.txt", 'r')
 TOKEN = file1.readline()
 file1.close() 
 
@@ -88,6 +91,22 @@ async def tictactoeinfo(ctx):
     await ctx.send(":one: :two: :three:\n"
                    ":four: :five: :six:\n"
                    ":seven: :eight: :nine:")
+    
+
+
+# in progress
+@client.command()
+async def tictactoe(ctx, p2 : discord.Member):
+    players = {ctx.message.author, p2}
+    
+    await ctx.send("Player 1: " + players[0]+
+                   "\nPlayer 2: " + players[1])
+    
+
+@client.command()
+async def play(ctx, songname):
+        await functions.join(ctx)
+    
     
 
 # add tic tac toe
