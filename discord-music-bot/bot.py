@@ -116,20 +116,6 @@ async def play(ctx, *, songname):
         await ctx.send(f"Queued the song '{songname}'")
 
 
-@client.command()
-async def thisisit(ctx):
-    test(ctx)
-
-def test(ctx):
-    coro = sendMessage(ctx, 'Please work')
-    fut = asyncio.run_coroutine_threadsafe(coro, client.loop)
-    fut.result()
-
-
-async def sendMessage(ctx, message):
-    await ctx.send(message)
-
-
 # add tic tac toe
 # add prints for music
 
