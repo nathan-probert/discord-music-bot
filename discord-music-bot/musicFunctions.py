@@ -1,3 +1,4 @@
+import asyncio
 import re
 import discord
 import os
@@ -5,11 +6,16 @@ import urllib
 import yt_dlp
 
 
+async def sendMessage(ctx, message):
+    await ctx.send(message)
+
 async def join(ctx):
     # join the voice channel
     try:
         channel = ctx.author.voice.channel
+        print("First here")
         await channel.connect()
+        print("now here")
         server = ctx.guild
         print("Joined a voice chat in the server: " + str(server))
         await ctx.guild.change_voice_state(channel = channel, self_mute=False, self_deaf=False)
@@ -17,6 +23,8 @@ async def join(ctx):
         await ctx.send("You are not in a voice channel.")
     except discord.errors.ClientException:
         pass
+
+    print("what is goingn on")
 
     try:
         # make folder struct for server if it doesn't exist
@@ -36,12 +44,17 @@ async def join(ctx):
 
 async def queueSong(ctx, songname):
     # write songname into file
-    file = open(str(ctx.guild) + '/' + str(ctx.guild) + ".txt", 'a')  # reads the entire file into content[]
+    file = open(str(ctx.guild) + '/' + str(ctx.guild) + ".txt", 'a')
     file.writelines(songname)
     file.close()
 
+    print("hello")
+
 
 def playSong(ctx):
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(sendMessage(ctx, "hello"))
+
     # get songname from file
     file = open(str(ctx.guild) + '/' + str(ctx.guild) + ".txt", 'r')  # reads the entire file into content[]
     songname = file.readline()
@@ -97,7 +110,8 @@ def playSong(ctx):
 
     # play the song
     source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3"))
-    ctx.voice_client.play(source, after=lambda e: playSong(ctx))
+    ctx.voice_client.play(source, after=lambda ex: playSong(ctx))
+
 
     # print now playing
 
