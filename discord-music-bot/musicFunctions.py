@@ -1,4 +1,3 @@
-import asyncio
 import re
 import discord
 import os
@@ -22,7 +21,7 @@ async def join(ctx):
     try:
         # make folder struct for server if it doesn't exist
         os.makedirs(os.path.join(str(ctx.guild)), 0o666)
-        file = open(str(os.path.join(str(ctx.guild))) + "/" + str(ctx.guild) + ".txt", "w+")  # create a file called servername.txt
+        file = open(str(os.path.join(str(ctx.guild))) + "/" + str(ctx.guild) + ".txt", "r+")
         file.close()
     except Exception:
         # if folder struct exists, make sure the txt file exists
@@ -85,6 +84,7 @@ def playSong(ctx):
             info = ydl.extract_info(songurl, download=True)
     else:
         message = "Unfortunately, we only allow songs up to 10 minutes long, and this video exceeds that limit."
+        print(message)
         ctx.send_message(message)
         return
     
@@ -98,6 +98,9 @@ def playSong(ctx):
     # play the song
     source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3"))
     ctx.voice_client.play(source, after=lambda e: playSong(ctx))
+
+    # print now playing
+
 
     # delete the old song
     file1 = open(str(ctx.guild) + '/' + str(ctx.guild) + ".txt", 'w+') 

@@ -1,3 +1,4 @@
+import asyncio
 from random import randint
 import discord
 from discord.ext import commands
@@ -109,11 +110,28 @@ async def tictactoe(ctx, p2 : discord.Member):
 async def play(ctx, *, songname):
     await musicFunctions.join(ctx)
     await musicFunctions.queueSong(ctx, songname)
-    musicFunctions.playSong(ctx)
-    
+    if (ctx.voice_client.is_playing() == False):
+        musicFunctions.playSong(ctx)
+    else:
+        await ctx.send(f"Queued the song {songname}")
+
+
+@client.command()
+async def thisisit(ctx):
+    test(ctx)
+
+def test(ctx):
+    coro = sendMessage(ctx, 'Please work')
+    fut = asyncio.run_coroutine_threadsafe(coro, client.loop)
+    fut.result()
+
+
+async def sendMessage(ctx, message):
+    await ctx.send(message)
+
 
 # add tic tac toe
-# add music
+# add prints for music
 
 # runs the bot
 client.run(TOKEN)
