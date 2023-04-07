@@ -1,3 +1,4 @@
+from random import randint
 import re
 import discord
 import os
@@ -120,3 +121,77 @@ def playSong(ctx):
     file1.close()
 
     return message
+
+
+def plPlay(ctx, playlistName, remainingSongs = 0):
+    filename = (f"playlists\\{playlistName}.txt")
+
+    try:
+        with open(filename, 'r') as file:
+            content = file.readlines()
+    except Exception as e:
+        return -1
+    
+    plPlaySong(ctx, content)
+
+
+def plPlaySong(ctx, content):
+    # last song in queue
+    if (content == []):
+        return
+
+    # choose a random song to play
+    numSongs = len(content)
+    r = randint(0,numSongs)
+    songname = content[r]
+
+    # delete the song that plays
+    del content[r]
+
+    # get the song url
+    songname = songname.replace(" ", "+")
+    # search for the song
+    html = urllib.request.urlopen("https://www.youtube.com/results?search_query=" + songname)
+    # find all possible videos and save them to video_ids
+    video_ids = re.findall(r"watch\?v=(\S{11})", html.read().decode())
+    # choose the top video, get its url
+    songurl = ("https://www.youtube.com/watch?v=" + video_ids[0])
+
+    # download the song
+    if (os.path.isfile(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")):
+        # a file is already there
+        os.remove(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+    ydlPref = {
+                'format': 'bestaudio/best',
+                'postprocessorts': [{
+                    'key': 'FFmpegExtractAudio',
+                    'prefessedcodec': 'mp3',
+                    'preferredquality': '192',
+                }],
+            }
+    
+    # check length of file
+    with yt_dlp.YoutubeDL(ydlPref) as ydl:
+        info = ydl.extract_info(songurl, download=False)
+    seconds = (info['duration'])
+
+    # has to be less than 10 min
+    if (seconds <= 600) :
+        with yt_dlp.YoutubeDL(ydlPref) as ydl:
+            info = ydl.extract_info(songurl, download=True)
+    else:
+        # loop through videos till shorter one is found?
+        return
+    
+    # now have the downloaded song, rename it and put in server folder
+    for file in os.listdir():
+        if file.endswith(".webm"):
+            os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+        if file.endswith(".m4a"):
+            os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+
+    # play the song
+    source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3"))
+    ctx.voice_client.play(source, after=lambda ex: plPlaySong(ctx, content))
+
+    print(f"\nNow playing {info['fulltitle']}")

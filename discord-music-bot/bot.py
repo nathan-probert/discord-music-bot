@@ -4,9 +4,9 @@ from discord.ext import commands
 import os
 import musicFunctions
 from requests import get
+import spotifyFunctions
 
 # get token for bot
-print(os.getcwd())
 file1 = open("discord-music-bot\\secret.txt", 'r')
 TOKEN = file1.readline()
 file1.close() 
@@ -23,6 +23,7 @@ async def on_ready():  # runs when the bot goes online
 
     await client.change_presence(status=discord.Status.do_not_disturb)
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="top tier music"))
+
 
 # help menu
 @client.command()
@@ -118,6 +119,20 @@ async def play(ctx, *, songname):
         await ctx.send(f"Queued the following: '{songname}'", delete_after=5)
 
 
+@client.command()
+async def plplay(ctx, *, playlistName):
+    await ctx.message.delete()
+    if (discord.utils.get(client.voice_clients, guild=ctx.guild) == None):
+        await musicFunctions.join(ctx)
+    if (ctx.voice_client.is_playing() == False):
+        value = (musicFunctions.plPlay(ctx, playlistName))
+        if (value == -1):
+            await ctx.send("Could not find your playlist")
+        else:
+            await ctx.send(f"Now playing your playlist called {playlistName}")
+    else:
+        await ctx.send("Something is already playing currently.")
+
 # work
 @client.command()
 async def pause(ctx):
@@ -132,6 +147,11 @@ async def resume(ctx):
     await ctx.message.delete()
     ctx.voice_client.resume()
     await ctx.send("Resumed", delete_after=5)
+
+
+@client.command()
+async def s(ctx, url, *, playlist_name):
+    await spotifyFunctions.makePlaylist(ctx, playlist_name, url)
 
 
 # add tic tac toe
