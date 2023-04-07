@@ -6,6 +6,10 @@ import musicFunctions
 from requests import get
 import spotifyFunctions
 
+# add skip feature
+# add playlist help
+
+
 # get token for bot
 file1 = open("discord-music-bot\\secret.txt", 'r')
 TOKEN = file1.readline()
@@ -28,10 +32,27 @@ async def on_ready():  # runs when the bot goes online
 # help menu
 @client.command()
 async def help(ctx):
-    await ctx.send("```yaml\n"
-                   "!join\nConnects the bot to your voice channel\n\n"
+    await ctx.send(f"```yaml\n"
+                   "!musichelp\nPrints the help menu for music\n\n"
+                   "!plhelp\nPrints the help menu for playlists\n\n"
+                   "!invite\nSends a link so you can invite King Chuck to your server\n\n"
                    "!av <target>\nDisplays full-size profile picture of target\n\n"
+                   "!changename <target> newname\nChange targets nickname\n\n"
+                   "!resetname <target>\nDelete targets nickname\n\n"
+                   "!randnum <min> <max>\nPrints a random number in the given range\n\n"
+                   "!flip\nFlips a coin and prints the result\n\n"
                    "```")
+    
+
+@client.command()
+async def musichelp (ctx):
+    await ctx.send(f"```yaml\n"
+                "!play <songname>\nSearches youtube for the song, joins the voice channel, plays the song (adds to queue if something is already playing)\n\n"
+                "!join\nJoins the voice channel\n\n"
+                "!pause\nPause the song\n\n"
+                "!resume\nResumes the song\n\n"
+                ""
+                "```")
 
     
 # works
@@ -46,16 +67,14 @@ async def invite(ctx):
 @client.command()
 async def changename(ctx, member: discord.Member, name):
     await member.edit(nick=name)
-@changename.error
-async def permission_error(ctx, error):
-    await ctx.send("Sorry, I do not have permissions to do that!")
-
-
-# works
-# reset nickname of a user
+    
 @client.command()
 async def resetname(ctx, member: discord.Member):
     await member.edit(nick=member.name)
+
+@changename.error
+async def permission_error(ctx, error):
+    await ctx.send("Sorry, I do not have permissions to do that!")
     
 
 # works
