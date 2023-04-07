@@ -113,7 +113,7 @@ async def play(ctx, *, songname):
     if (ctx.voice_client.is_playing() == False):
         musicFunctions.playSong(ctx)
     else:
-        await ctx.send(f"Queued the song {songname}")
+        await ctx.send(f"Queued the song '{songname}'")
 
 
 @client.command()
