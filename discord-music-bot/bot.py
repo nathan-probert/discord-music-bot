@@ -1,11 +1,9 @@
-import asyncio
 from random import randint
 import discord
 from discord.ext import commands
 import os
-
-from requests import get
 import musicFunctions
+from requests import get
 
 # get token for bot
 print(os.getcwd())
@@ -33,6 +31,7 @@ async def help(ctx):
                    "!join\nConnects the bot to your voice channel\n\n"
                    "!av <target>\nDisplays full-size profile picture of target\n\n"
                    "```")
+
     
 # works
 # allow the bot to be invited to servers
@@ -106,14 +105,33 @@ async def tictactoe(ctx, p2 : discord.Member):
                    "\nPlayer 2: " + players[1])
     
 
+# works
 @client.command()
 async def play(ctx, *, songname):
-    await musicFunctions.join(ctx)
+    await ctx.message.delete()
+    if (discord.utils.get(client.voice_clients, guild=ctx.guild) == None):
+        await musicFunctions.join(ctx)
     await musicFunctions.queueSong(ctx, songname)
     if (ctx.voice_client.is_playing() == False):
-        musicFunctions.playSong(ctx)
+        await ctx.send(musicFunctions.playSong(ctx))
     else:
-        await ctx.send(f"Queued the song '{songname}'")
+        await ctx.send(f"Queued the following: '{songname}'", delete_after=5)
+
+
+# work
+@client.command()
+async def pause(ctx):
+    await ctx.message.delete()
+    ctx.voice_client.pause()
+    await ctx.send("Paused", delete_after=5)
+
+
+# works
+@client.command()
+async def resume(ctx):
+    await ctx.message.delete()
+    ctx.voice_client.resume()
+    await ctx.send("Resumed", delete_after=5)
 
 
 # add tic tac toe

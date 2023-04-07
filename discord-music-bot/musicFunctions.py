@@ -1,4 +1,3 @@
-import asyncio
 import re
 import discord
 import os
@@ -6,16 +5,15 @@ import urllib
 import yt_dlp
 
 
-async def sendMessage(ctx, message):
+async def sendMessageAsync(ctx, message):
     await ctx.send(message)
+
 
 async def join(ctx):
     # join the voice channel
     try:
         channel = ctx.author.voice.channel
-        print("First here")
         await channel.connect()
-        print("now here")
         server = ctx.guild
         print("Joined a voice chat in the server: " + str(server))
         await ctx.guild.change_voice_state(channel = channel, self_mute=False, self_deaf=False)
@@ -24,22 +22,19 @@ async def join(ctx):
     except discord.errors.ClientException:
         pass
 
-    print("what is goingn on")
-
     try:
         # make folder struct for server if it doesn't exist
         os.makedirs(os.path.join(str(ctx.guild)), 0o666)
-        file = open(str(os.path.join(str(ctx.guild))) + "/" + str(ctx.guild) + ".txt", "r+")
+        file = open(str(os.path.join(str(ctx.guild))) + "/" + str(ctx.guild) + ".txt", "w+")
         file.close()
     except Exception:
         # if folder struct exists, make sure the txt file exists
         try :
-            file1 = open(str(ctx.guild) + '/' + str(ctx.guild) + ".txt", "a")
+            file1 = open(str(ctx.guild) + '/' + str(ctx.guild) + ".txt", "w")
             file1.close()
         except Exception as e:
             print("There was a problem creating the file.")
             print(str(e))
-
 
 
 async def queueSong(ctx, songname):
@@ -48,15 +43,10 @@ async def queueSong(ctx, songname):
     file.writelines(songname)
     file.close()
 
-    print("hello")
-
 
 def playSong(ctx):
-    # loop = asyncio.get_event_loop()
-    # loop.run_until_complete(sendMessage(ctx, "hello"))
-
     # get songname from file
-    file = open(str(ctx.guild) + '/' + str(ctx.guild) + ".txt", 'r')  # reads the entire file into content[]
+    file = open(str(ctx.guild) + '/' + str(ctx.guild) + ".txt", 'r')
     songname = file.readline()
     file.close()
 
@@ -96,9 +86,8 @@ def playSong(ctx):
         with yt_dlp.YoutubeDL(ydlPref) as ydl:
             info = ydl.extract_info(songurl, download=True)
     else:
-        message = "Unfortunately, we only allow songs up to 10 minutes long, and this video exceeds that limit."
+        # loop through videos till shorter one is found?
         print(message)
-        ctx.send_message(message)
         return
     
     # now have the downloaded song, rename it and put in server folder
@@ -112,14 +101,22 @@ def playSong(ctx):
     source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3"))
     ctx.voice_client.play(source, after=lambda ex: playSong(ctx))
 
+    print(f"\nNow playing {info['fulltitle']}")
 
-    # print now playing
-
+    # print
+    seconds = (info['duration'])
+    minutes, seconds = divmod(seconds, 60)
+    # print 01 rather than 1
+    if (seconds < 10):
+        Sseconds = ("0"+str(seconds))
+    else:
+        Sseconds = seconds
+    message = (f"```Now playing: {info['title']}\nDuration: {minutes}:{(Sseconds)}\n(Note that queued songs will not be announced)```")
 
     # delete the old song
     file1 = open(str(ctx.guild) + '/' + str(ctx.guild) + ".txt", 'w+') 
-    content = file1.readlines()[1:]
-    file1.writelines(content)
+    content = file1.readlines()
+    file1.writelines(content[1:])
     file1.close()
 
-
+    return message
