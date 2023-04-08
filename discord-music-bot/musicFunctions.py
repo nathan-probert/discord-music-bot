@@ -1,13 +1,11 @@
+import asyncio
 from random import randint
 import re
+import time
 import discord
 import os
 import urllib
 import yt_dlp
-
-
-async def sendMessageAsync(ctx, message):
-    await ctx.send(message)
 
 
 async def join(ctx):
@@ -64,10 +62,20 @@ def playSong(ctx):
     # choose the top video, get its url
     songurl = ("https://www.youtube.com/watch?v=" + video_ids[0])
 
-    # download the song
+    secondChance = 0
     if (os.path.isfile(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")):
         # a file is already there
-        os.remove(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+        try:
+            os.remove(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+        except:
+            try:
+                secondChance = 1
+                os.remove(str(ctx.guild) + '/' + str(ctx.guild) + "2.mp3")
+            except:
+                print("fold")
+                pass
+            print("when song is skipped, it is still open for some reason")
+        
     ydlPref = {
                 'format': 'bestaudio/best',
                 'postprocessorts': [{
@@ -88,18 +96,27 @@ def playSong(ctx):
             info = ydl.extract_info(songurl, download=True)
     else:
         # loop through videos till shorter one is found?
-        print(message)
         return
     
     # now have the downloaded song, rename it and put in server folder
-    for file in os.listdir():
-        if file.endswith(".webm"):
-            os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
-        if file.endswith(".m4a"):
-            os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+    if (secondChance != 1):
+        for file in os.listdir():
+            if file.endswith(".webm"):
+                os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+            if file.endswith(".m4a"):
+                os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+        source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3"))
+
+    else:
+        for file in os.listdir():
+            if file.endswith(".webm"):
+                os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + "2.mp3")
+            if file.endswith(".m4a"):
+                os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + "2.mp3")
+        source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(str(ctx.guild) + '/' + str(ctx.guild) + "2.mp3"))
+
 
     # play the song
-    source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3"))
     ctx.voice_client.play(source, after=lambda ex: playSong(ctx))
 
     print(f"\nNow playing {info['fulltitle']}")
@@ -136,6 +153,8 @@ def plPlay(ctx, playlistName, remainingSongs = 0):
 
 
 def plPlaySong(ctx, content):
+    ctx.voice_client.stop()
+
     # last song in queue
     if (content == []):
         return
@@ -158,9 +177,20 @@ def plPlaySong(ctx, content):
     songurl = ("https://www.youtube.com/watch?v=" + video_ids[0])
 
     # download the song
+    secondChance = 0
     if (os.path.isfile(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")):
         # a file is already there
-        os.remove(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+        try:
+            os.remove(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+        except:
+            try:
+                secondChance = 1
+                os.remove(str(ctx.guild) + '/' + str(ctx.guild) + "2.mp3")
+            except:
+                print("fold")
+                pass
+            print("when song is skipped, it is still open for some reason")
+        
     ydlPref = {
                 'format': 'bestaudio/best',
                 'postprocessorts': [{
@@ -184,14 +214,24 @@ def plPlaySong(ctx, content):
         return
     
     # now have the downloaded song, rename it and put in server folder
-    for file in os.listdir():
-        if file.endswith(".webm"):
-            os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
-        if file.endswith(".m4a"):
-            os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+    if (secondChance != 1):
+        for file in os.listdir():
+            if file.endswith(".webm"):
+                os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+            if file.endswith(".m4a"):
+                os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + ".mp3")
+        source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3"))
+
+    else:
+        for file in os.listdir():
+            if file.endswith(".webm"):
+                os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + "2.mp3")
+            if file.endswith(".m4a"):
+                os.rename(file, str(ctx.guild) + '/' + str(ctx.guild) + "2.mp3")
+        source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(str(ctx.guild) + '/' + str(ctx.guild) + "2.mp3"))
+
 
     # play the song
-    source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(str(ctx.guild) + '/' + str(ctx.guild) + ".mp3"))
     ctx.voice_client.play(source, after=lambda ex: plPlaySong(ctx, content))
 
     print(f"\nNow playing {info['fulltitle']}")

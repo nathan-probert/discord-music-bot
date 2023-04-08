@@ -51,7 +51,7 @@ async def musichelp (ctx):
                 "!join\nJoins the voice channel\n\n"
                 "!pause\nPause the song\n\n"
                 "!resume\nResumes the song\n\n"
-                ""
+                "!skip\nSkips the current song\n\n"
                 "```")
 
     
@@ -128,6 +128,7 @@ async def tictactoe(ctx, p2 : discord.Member):
 # works
 @client.command()
 async def play(ctx, *, songname):
+    # ctx.voice_client.source.volume = 0.5
     await ctx.message.delete()
     if (discord.utils.get(client.voice_clients, guild=ctx.guild) == None):
         await musicFunctions.join(ctx)
@@ -166,6 +167,12 @@ async def resume(ctx):
     await ctx.message.delete()
     ctx.voice_client.resume()
     await ctx.send("Resumed", delete_after=5)
+
+
+@client.command()
+async def skip(ctx):
+    await ctx.message.delete()
+    ctx.voice_client.stop()
 
 
 @client.command()
