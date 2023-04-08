@@ -6,9 +6,6 @@ import musicFunctions
 from requests import get
 import spotifyFunctions
 
-# add skip feature
-# add playlist help
-
 
 # get token for bot
 file1 = open("discord-music-bot\\secret.txt", 'r')
@@ -52,6 +49,20 @@ async def musichelp (ctx):
                 "!pause\nPause the song\n\n"
                 "!resume\nResumes the song\n\n"
                 "!skip\nSkips the current song\n\n"
+                "!stop\nStops and disconnects the bot\n\n"
+                "```")
+    
+
+@client.command()
+async def plhelp (ctx):
+    await ctx.send(f"```yaml\n"
+                "!plplay <playlist name>\nShuffle plays the desired playlist\n\n"
+                "!s <spotify url> <new playlist name>\nCreates a new playlist\n\n"
+                "!pllist\nLists all current playlists\n\n"
+                "!skip\nSkips the current song\n\n"
+                "!pause\nPause the song\n\n"
+                "!resume\nResumes the song\n\n"
+                "!stop\nStops and disconnects the bot\n\n"
                 "```")
 
     
@@ -115,7 +126,6 @@ async def tictactoeinfo(ctx):
                    ":seven: :eight: :nine:")
     
 
-
 # in progress
 @client.command()
 async def tictactoe(ctx, p2 : discord.Member):
@@ -140,6 +150,11 @@ async def play(ctx, *, songname):
 
 
 @client.command()
+async def join(ctx):
+    await musicFunctions.join(ctx)
+
+
+@client.command()
 async def plplay(ctx, *, playlistName):
     await ctx.message.delete()
     if (discord.utils.get(client.voice_clients, guild=ctx.guild) == None):
@@ -158,7 +173,7 @@ async def plplay(ctx, *, playlistName):
 async def pause(ctx):
     await ctx.message.delete()
     ctx.voice_client.pause()
-    await ctx.send("Paused", delete_after=5)
+    await ctx.send("-----Paused-----", delete_after=5)
 
 
 # works
@@ -166,13 +181,20 @@ async def pause(ctx):
 async def resume(ctx):
     await ctx.message.delete()
     ctx.voice_client.resume()
-    await ctx.send("Resumed", delete_after=5)
+    await ctx.send("-----Resumed-----", delete_after=5)
 
 
 @client.command()
 async def skip(ctx):
     await ctx.message.delete()
     ctx.voice_client.stop()
+    await ctx.send("-----Skipped-----", delete_after=5)
+
+
+@client.command()
+async def stop(ctx):
+    await musicFunctions.disconnect(ctx)
+    await ctx.send("-----Stopped-----", delete_after=5)
 
 
 @client.command()
@@ -180,8 +202,15 @@ async def s(ctx, url, *, playlist_name):
     await spotifyFunctions.makePlaylist(ctx, playlist_name, url)
 
 
-# add tic tac toe
-# add prints for music
+@client.command()
+async def pllist(ctx):
+    await ctx.send("Here is a list of all playlists:")
+    playlistsToSend = ""
+    playlists = os.listdir("playlists")
+    for p in playlists:
+        p=p.replace(".txt", "\n")
+        playlistsToSend += p
+    await ctx.send(playlistsToSend)
 
 # runs the bot
 client.run(TOKEN)

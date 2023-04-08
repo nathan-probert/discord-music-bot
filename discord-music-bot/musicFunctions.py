@@ -44,6 +44,12 @@ async def queueSong(ctx, songname):
 
 
 def playSong(ctx):
+    try:
+        ctx.voice_client.stop()
+    except:
+        # bot was stopped
+        return
+    
     # get songname from file
     file = open(str(ctx.guild) + '/' + str(ctx.guild) + ".txt", 'r')
     songname = file.readline()
@@ -153,7 +159,11 @@ def plPlay(ctx, playlistName, remainingSongs = 0):
 
 
 def plPlaySong(ctx, content):
-    ctx.voice_client.stop()
+    try:
+        ctx.voice_client.stop()
+    except:
+        # bot was stopped
+        return
 
     # last song in queue
     if (content == []):
@@ -235,3 +245,8 @@ def plPlaySong(ctx, content):
     ctx.voice_client.play(source, after=lambda ex: plPlaySong(ctx, content))
 
     print(f"\nNow playing {info['fulltitle']}")
+
+
+async def disconnect(ctx):
+    ctx.voice_client.stop()
+    await ctx.voice_client.disconnect()
