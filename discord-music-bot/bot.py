@@ -3,8 +3,8 @@ import discord
 from discord.ext import commands
 import os
 import musicFunctions
-from requests import get
 import spotifyFunctions
+from translate import Translator
 
 
 # get token for bot
@@ -38,6 +38,7 @@ async def help(ctx):
                    "!resetname <target>\nDelete targets nickname\n\n"
                    "!randnum <min> <max>\nPrints a random number in the given range\n\n"
                    "!flip\nFlips a coin and prints the result\n\n"
+                   "!translate <language> <"
                    "```")
     
 
@@ -76,6 +77,20 @@ async def invite(ctx):
     await ctx.send("Click this link to invite me to your server!\n"
                    "https://discord.com/api/oauth2/authorize?client_id=812037295040364584&permissions=8&scope=bot")
     
+
+@client.command()
+async def spam(ctx, user : discord.Member, numPings):
+    i = 0
+
+    if user.name == "Proby.8":
+        await ctx.send("Nice try")
+        return
+
+    while i < int(numPings):
+        await ctx.send(user.mention)
+        i+=1
+
+
 # works
 # change nickname of a user
 @client.command()
@@ -294,6 +309,23 @@ async def pladd(ctx, playlistNum, *, songtitle):
 
     await ctx.send(f"Added your song {songtitle} to your playlist {playlist}")
 
+
+@client.command()
+async def translate(ctx, language, *, text):
+    language = language.lower()
+    conversion = {'ar': 'arabic', 'bg': 'bulgarian', 'zh-cn': 'chinese', 'cs': 'czech', 'da': 'danish', 'nl': 'dutch'
+                  , 'en': 'english', 'fr': 'french', 'de': 'german', 'el': 'greek', 'hu': 'hungarian', 'it': 'italian'
+                  , 'la': 'latin', 'no': 'norwegian', 'pl': 'polish', 'pt': 'portuguese', 'ru': 'russian', 'sl': 'slovenian'
+                  , 'es': 'spanish', 'sv': 'swedish', 'tr': 'turkish', 'elv': 'elvish'}
+    
+    for c in conversion:
+        if conversion[c] == language:
+            code = c
+    
+
+    translator= Translator(to_lang=code)
+    translation = translator.translate(text)
+    await ctx.send(translation)
 
 
 # runs the bot
