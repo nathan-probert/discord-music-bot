@@ -59,6 +59,9 @@ async def plhelp (ctx):
                 "!plplay <playlist name>\nShuffle plays the desired playlist\n\n"
                 "!s <spotify url> <new playlist name>\nCreates a new playlist\n\n"
                 "!pllist\nLists all current playlists\n\n"
+                "!pllist <playlist number>\n\nPrints all songs of the playlist\n\n"
+                "!pladd <playlist number> <song name>\nAdds a song to the playlist\n\n"
+                "!pldelete <playlist number> <song name>\Deletes a song from the playlist\n\n"
                 "!skip\nSkips the current song\n\n"
                 "!pause\nPause the song\n\n"
                 "!resume\nResumes the song\n\n"
@@ -203,14 +206,95 @@ async def s(ctx, url, *, playlist_name):
 
 
 @client.command()
-async def pllist(ctx):
-    await ctx.send("Here is a list of all playlists:")
-    playlistsToSend = ""
+async def pllist(ctx, playlistNum=-1):
+    if (playlistNum == -1):
+        i=1
+        await ctx.send("Here is a list of all playlists:")
+        playlistsToSend = ""
+        playlists = os.listdir("playlists")
+        for p in playlists:
+            p=p.replace(".txt", "\n")
+            playlistsToSend += str(i) + ": " + p
+            i+=1
+        await ctx.send(f"{playlistsToSend}")
+    else:
+        i = 1
+        playlists = os.listdir("playlists")
+        for p in playlists:
+            if (i == playlistNum):
+                playlist = p
+            i+=1
+        filename = (f"playlists\\{playlist}")
+
+        with open(filename, "r") as f:
+            lines = f.readlines()
+
+        songsToSend = ""
+        for l in lines:
+            songsToSend += l + "\n"
+        try:
+            await ctx.send("```" + songsToSend + "```")
+        except:
+            await ctx.send("Your playlist exceeds discord's 2000 char limit. Please look at this file instead")
+            await ctx.send(file=discord.File(filename))
+
+
+@client.command()
+async def pldelete(ctx, playlistNum, *, songtitle):
+    i = 1
     playlists = os.listdir("playlists")
     for p in playlists:
-        p=p.replace(".txt", "\n")
-        playlistsToSend += p
-    await ctx.send(playlistsToSend)
+        if (str(i) == playlistNum):
+            playlist = p
+        i+=1
+    
+    delete = False
+    filename = (f"playlists\\{playlist}")
+
+    with open(filename, "r") as f:
+        lines = f.readlines()
+
+    oglines = lines
+
+    songtitle = songtitle.lower()
+    songtitle = songtitle.strip("\n")
+    songtitle = songtitle.replace(" ", "")
+
+    with open(filename, "w") as f:
+        i=0
+        for line in lines:
+            line = line.lower()
+            line = line.strip("\n")
+            line = line.replace(" ", "")
+
+            if line != songtitle:
+                f.write(oglines[i])
+            else:
+                await ctx.send(f"Your song {oglines[i]} has been deleted from {playlist}")
+            i+=1
+    if (delete == False):
+        await ctx.send("We could not find that song. "
+                       "Please use !pllist <playlist name> to see your playlist, "
+                       "as any spelling mistakes you made when entering the song name "
+                       "are not corrected and must be entered here as well.")
+
+
+@client.command()
+async def pladd(ctx, playlistNum, *, songtitle):
+    i = 1
+    playlists = os.listdir("playlists")
+    for p in playlists:
+        if (str(i) == playlistNum):
+            playlist = p
+        i+=1
+    
+    filename = (f"playlists\\{playlist}")
+    with open(filename, "a") as fw:
+        fw.write(songtitle)
+
+    await ctx.send(f"Added your song {songtitle} to your playlist {playlist}")
+
+
 
 # runs the bot
 client.run(TOKEN)

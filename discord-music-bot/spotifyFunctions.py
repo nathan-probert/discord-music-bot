@@ -42,7 +42,6 @@ async def makePlaylist(ctx, playlist_name, url):
     spotify = spotipy.Spotify(auth=access_token)
 
     results = spotify.user_playlist(username, url, fields='tracks,next,name')
-    playlist_name = results['name']
     print(f"Writing {results['tracks']['total']} tracks to {filename}.")
     await ctx.send(f"Writing {results['tracks']['total']} tracks to {playlist_name}.")
 
