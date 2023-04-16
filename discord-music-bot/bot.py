@@ -82,6 +82,7 @@ async def invite(ctx):
 async def spam(ctx, user : discord.Member, numPings):
     i = 0
 
+    # so i dont get spammed
     if user.name == "Proby.8":
         await ctx.send("Nice try")
         return
