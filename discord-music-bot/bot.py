@@ -79,11 +79,11 @@ async def invite(ctx):
     
 
 @client.command()
-async def spam(ctx, user : discord.Member, numPings):
+async def spam(ctx, user : discord.Member, numPings=100):
     i = 0
 
     # so i dont get spammed
-    if user.name == "Proby.8":
+    if ((user.name == "Proby.8") or (user.name == "MiKe WaZonsKi")):
         await ctx.send("Nice try")
         return
 
@@ -175,6 +175,8 @@ async def join(ctx):
 
 @client.command()
 async def plplay(ctx, *, playlistName):
+    if (len(playlistName) == 1):
+        print("here")
     await ctx.message.delete()
     if (discord.utils.get(client.voice_clients, guild=ctx.guild) == None):
         await musicFunctions.join(ctx)
