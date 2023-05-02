@@ -1,3 +1,4 @@
+import asyncio
 from random import randint
 import discord
 from discord.ext import commands
@@ -140,15 +141,6 @@ async def tictactoeinfo(ctx):
     await ctx.send(":one: :two: :three:\n"
                    ":four: :five: :six:\n"
                    ":seven: :eight: :nine:")
-    
-
-# in progress
-@client.command()
-async def tictactoe(ctx, p2 : discord.Member):
-    players = {ctx.message.author, p2}
-    
-    await ctx.send("Player 1: " + players[0]+
-                   "\nPlayer 2: " + players[1])
     
 
 # works
@@ -309,6 +301,532 @@ async def pladd(ctx, playlistNum, *, songtitle):
 
     await ctx.send(f"Added your song {songtitle} to your playlist {playlist}")
 
+
+GameOver = True
+@client.command()
+async def tictactoe(ctx, p2 : discord.Member, troll=3):
+    global botmark
+    global notbotmark
+    global GameOver
+    global turn
+    global board
+    global player1
+    global player2
+    global count
+    global winningConditions
+    if p2 == client.user:
+        winningConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ]
+        if troll == 3:
+            num = randint(1,2)
+        elif troll == 1:
+            num = 1
+        elif troll == 2:
+            num = 2
+        p1 = ctx.message.author
+        player1 = p1
+        player2 = client.user
+        if num == 1:
+            turn = player1
+            botmark = ':o2:'
+            notbotmark = ':regional_indicator_x:'
+        else:
+            turn = player2
+            botmark = ':regional_indicator_x:'
+            notbotmark = ':o2:'
+        count = 0
+        global GameOver
+        if GameOver:
+            GameOver = False
+            board = {0: ":white_large_square:", 1: ":white_large_square:", 2: ":white_large_square:",
+                     3: ":white_large_square:", 4: ":white_large_square:", 5: ":white_large_square:",
+                     6: ":white_large_square:", 7: ":white_large_square:", 8: ":white_large_square:"}
+            if num == 2:
+                await facebot(ctx, ctx.message.author)
+            else:
+                await go2nd(ctx)
+        else:
+            await ctx.send("Please finish the current game first.")
+    else:
+        p1 = ctx.message.author
+        if GameOver:
+            GameOver = False
+
+            count = 0
+            await ctx.send("Starting your Tic Tac Toe game.\nPlayer 1: " + str(p1)
+                           +"\nPlayer 2: " + str(p2))
+
+            board = [":white_large_square:", ":white_large_square:", ":white_large_square:",
+                     ":white_large_square:", ":white_large_square:", ":white_large_square:",
+                     ":white_large_square:", ":white_large_square:", ":white_large_square:"]
+            await print_board(ctx, board)
+            if troll == 3:
+                num = randint(1,2)
+            elif troll == 1:
+                num = 1
+            elif troll == 2:
+                num = 2
+
+            player1 = p1
+
+            player2 = p2
+            if num == 1:
+                turn = p1
+                await ctx.send("It is " + str(p1.mention) + "'s turn. Use !t <position from 1- 9>")
+            elif num == 2:
+                await ctx.send("It is " + str(p2.mention) + "'s turn. Use !t <position from 1- 9>")
+                turn = p2
+            winningConditions = [
+                [0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8],
+                [0, 3, 6],
+                [1, 4, 7],
+                [2, 5, 8],
+                [0, 4, 8],
+                [2, 4, 6]
+            ]
+        else:
+            await ctx.send("Please finish the current game or use !t stop to end it.")
+
+
+@client.command()
+async def t(ctx, move, bot=False):
+    if move != 'stop':
+        move = int(move)
+        global GameOver
+        if not GameOver:
+            global count
+            global turn
+
+            mark = ""
+            if turn == ctx.author or bot:
+                if player2 != client.user:
+                    if turn == player1:
+                        mark = ":regional_indicator_x:"
+                    elif turn == player2:
+                        mark = ":o2:"
+                else:
+                    if turn == player1:
+                        mark = notbotmark
+                    elif turn == player2:
+                        mark = botmark
+                if move < 1 or move > 9:
+                    await ctx.send("Please enter a number from 1 - 9")
+                elif board[move - 1] == ":white_large_square:":
+                    count = count + 1
+                    board[move-1] = mark
+                    await print_board(ctx, board)
+                    await checkwinner(ctx, board, mark)
+                    if turn == player2:
+                        turn = player1
+                    elif turn == player1:
+                        turn = player2
+                    if not GameOver:
+                        await ctx.send("It is " + str(turn.mention) + "'s turn. Use !t <position from 1- 9>")
+                elif board[move-1] == ":white_large_square:" and bot:
+                    count = count + 1
+                    board[move-1] = mark
+                    await print_board(ctx, board)
+                    await checkwinner(ctx, board, mark)
+                    if turn == player2:
+                        turn = player1
+                    elif turn == player1:
+                        turn = player2
+                    if not GameOver:
+                        await ctx.send("It is " + str(turn.mention) + "'s turn. Use !t <position from 1- 9>")
+                else:
+                    await ctx.send("Someone already played on this square.")
+            else:
+                await ctx.send("It is not your turn.")
+        else:
+            pass
+    else:
+        await ctx.send("The game has been stopped.")
+        GameOver = True
+    if GameOver == False:
+        if turn == client.user:
+            await asyncio.sleep(1.5)
+            await botgo(ctx)
+
+
+async def fake_print_board(ctx, board):
+    line1 = board[0], board[1], board[2]
+    line2 = board[3], board[4], board[5]
+    line3 = board[6], board[7], board[8]
+    await ctx.send(line1)
+    await ctx.send(line2)
+    await ctx.send(line3)
+
+
+async def print_board(ctx, board):
+    line = ""
+    for x in range(len(board)):
+        if x ==2 or x == 5 or x == 8:
+            line += " " + board[x]
+            await ctx.send(line)
+            line = ""
+        else:
+            line += " " + board[x]
+
+
+async def checkwinner(ctx, board, mark):
+    global GameOver
+    for condition in winningConditions:
+        if board[condition[0]] == mark and board[condition[1]] == mark and board[condition[2]] == mark:
+            await ctx.send("Game over")
+            await ctx.send(mark + " wins!")
+            GameOver = True
+    if count >= 9:
+        if GameOver == False:
+            await ctx.send("It's a tie!")
+            GameOver = True
+
+
+async def facebot(ctx, player):
+    await ctx.send("That was a mistake!\nPlayer 1: "+str(player)+"\nPlayer 2: "+str(client.user))
+    await print_board(ctx, board)
+    global turn
+    turn = player2
+    await ctx.send("It is "+turn.mention+"'s turn. Use !t <position from 1-9>")
+    if turn == client.user:
+        pos = 1 #first play
+        if spaceIsFree(pos):
+            await ctx.send("!t "+str(pos))
+            await t(ctx, pos, True)
+        return
+
+
+
+async def go2nd(ctx):
+    global player1
+    global player2
+    await ctx.send("That was a mistake!\nPlayer 1: "+str(player1)+"\nPlayer 2: "+str(player2))
+    await print_board(ctx, board)
+    global turn
+    turn = player1
+    await ctx.send("It is "+turn.mention+"'s turn. Use !t <position from 1-9>")
+
+
+async def botgo(ctx):
+    global botmark
+    global notbotmark
+    global getrippin
+    global wherestuffat
+    wherestuffat = 0
+    global board
+    count = 0
+    for key in board.keys():
+        if (board[key] == ':white_large_square:'):
+            count = count + 1
+
+    if botmark == ':regional_indicator_x:':
+        if count == 5:
+            getrippin = 0
+            x = wherestuffat
+            for key in board.keys():
+                if (board[key] == notbotmark):
+                    if key != wherestuffat:
+                        y = key
+                    #There new placement is y
+            if x == 1:
+                check = spaceIsFree(3)
+                if check:
+                    await ctx.send("!t 4")
+                    await t(ctx, 4, True)
+                else:
+                    await ctx.send("!t 5")
+                    await t(ctx, 5, True)
+                    wherestuffat = 1
+            if x == 2:
+                check = spaceIsFree(4)
+                if check:
+                    await ctx.send("!t 5")
+                    await t(ctx, 5, True)
+                else:
+                    await ctx.send("!t 7")
+                    await t(ctx, 7, True)
+                    wherestuffat = 2
+            if x == 3:
+                check = spaceIsFree(1)
+                if check:
+                    await ctx.send("!t 2")
+                    await t(ctx, 2, True)
+                else:
+                    await ctx.send("!t 5")
+                    await t(ctx, 5, True)
+                wherestuffat = 3
+            if x == 4:
+                stop = 0
+                check = spaceIsFree(2)
+                if not check:
+                    await ctx.send("!t 7")
+                    await t(ctx, 7, True)
+                    stop = 1
+                check = spaceIsFree(6)
+                if not check:
+                    await ctx.send("!t 3")
+                    await t(ctx, 3, True)
+                    stop = 1
+                if stop == 0:
+                    getrippin = 1
+                wherestuffat = 4
+            if x == 5:
+                check = spaceIsFree(2)
+                if check:
+                    await ctx.send("!t 3")
+                    await t(ctx, 3, True)
+                else:
+                    await ctx.send("!t 5")
+                    await t(ctx, 5, True)
+                wherestuffat = 5
+            if x == 6:
+                check = spaceIsFree(4)
+                if check:
+                    await ctx.send("!t 5")
+                    await t(ctx, 5, True)
+                else:
+                    await ctx.send("!t 3")
+                    await t(ctx, 3, True)
+                wherestuffat = 6
+            if x == 7:
+                check = spaceIsFree(1)
+                if check:
+                    await ctx.send("!t 2")
+                    await t(ctx, 2, True)
+                else:
+                    await ctx.send("!t 5")
+                    await t(ctx, 5, True)
+            if x == 8:
+                check = spaceIsFree(3)
+                if check:
+                    await ctx.send("!t 4")
+                    await t(ctx, 4, True)
+                else:
+                    await ctx.send("!t 3")
+                    await t(ctx, 3, True)
+                wherestuffat = 8
+
+        elif count > 6:
+            getrippin = 0
+            for key in board.keys():
+                if (board[key] == notbotmark):
+                    x = key
+            if x == 1:
+                await ctx.send("!t 7")
+                await t(ctx, 7, True)
+                wherestuffat = 1
+            if x == 2:
+                await ctx.send("!t 9")
+                await t(ctx, 9, True)
+                wherestuffat = 2
+            if x == 3:
+                await ctx.send("!t 3")
+                await t(ctx, 3, True)
+                wherestuffat = 3
+            if x == 4:
+                await ctx.send("!t 9")
+                await t(ctx, 9, True)
+                wherestuffat = 4
+            if x == 5:
+                await ctx.send("!t 7")
+                await t(ctx, 7, True)
+                wherestuffat = 5
+            if x == 6:
+                await ctx.send("!t 9")
+                await t(ctx, 9, True)
+                wherestuffat = 6
+            if x == 7:
+                await ctx.send("!t 3")
+                await t(ctx, 3, True)
+                wherestuffat = 7
+            if x == 8:
+                await ctx.send("!t 7")
+                await t(ctx, 7, True)
+                wherestuffat = 8
+
+        if count < 6:
+            getrippin = 1
+        if getrippin == 1:
+            dontstop = True
+            repeat = 0
+            while dontstop:
+                #if turn == client.user:
+                bestScore = -100
+                bestMove = 0
+                for key in board.keys():
+                    if (board[key] == ':white_large_square:'):
+                        board[key] = botmark
+                        score = minimax(board, 0, False)
+                        board[key] = ':white_large_square:'
+                        if (score > bestScore) and spaceIsFree(key):
+                            bestScore = score
+                            bestMove = key
+                    else:
+                        pass
+                if spaceIsFree(bestMove + repeat):
+                    await ctx.send("!t "+str(bestMove + 1 + repeat))
+                    await t(ctx, bestMove+1+repeat, True)
+                    dontstop = False
+                else:
+                    repeat = 1 + repeat
+
+    elif botmark == ':o2:':
+        getrippin = 0
+        if count == 8:
+            for key in board.keys():
+                if (board[key] == notbotmark):
+                    x = key
+                    #x is where they played
+                    wherestuffat = key
+            check = spaceIsFree(4)
+            if check:
+                await ctx.send("!t 5")
+                await t(ctx, 5, True)
+            else:
+                await ctx.send("!t 1")
+                await t(ctx, 1, True)
+
+        if count == 6:
+            for key in board.keys():
+                if (board[key] == notbotmark):
+                    if key != wherestuffat:
+                        x = key #new placement
+
+            if x == 8:
+                await ctx.send("!t 3")
+                await t(ctx, 3, True)
+            else:
+                getrippin = 1
+
+        if count < 5:
+            getrippin = 1
+        if getrippin == 1:
+            dontstop = True
+            repeat = 0
+            while dontstop:
+                #if turn == client.user:
+                bestScore = -100
+                bestMove = 0
+                for key in board.keys():
+                    if (board[key] == ':white_large_square:'):
+                        board[key] = botmark
+                        score = minimax(board, 0, False)
+                        board[key] = ':white_large_square:'
+                        if (score > bestScore) and spaceIsFree(key):
+                            bestScore = score
+                            bestMove = key
+                    else:
+                        pass
+
+                if spaceIsFree(bestMove + repeat):
+                    await ctx.send("!t "+str(bestMove + 1 + repeat))
+                    await t(ctx, bestMove+1+repeat, True)
+                    dontstop = False
+                else:
+                    repeat = 1 + repeat
+
+
+
+
+
+
+def checkWhichMarkWon(mark):
+    if board[0] == board[1] and board[0] == board[2] and board[0] == mark:
+        return True
+    elif (board[3] == board[4] and board[3] == board[5] and board[3] == mark):
+        return True
+    elif (board[6] == board[7] and board[6] == board[8] and board[6] == mark):
+        return True
+    elif (board[0] == board[3] and board[0] == board[6] and board[0] == mark):
+        return True
+    elif (board[1] == board[4] and board[1] == board[7] and board[1] == mark):
+        return True
+    elif (board[2] == board[5] and board[2] == board[8] and board[2] == mark):
+        return True
+    elif (board[0] == board[4] and board[0] == board[8] and board[0] == mark):
+        return True
+    elif (board[6] == board[4] and board[6] == board[3] and board[7] == mark):
+        return True
+    else:
+        return False
+
+
+def checkwinnernoendgame(board, mark):
+    for condition in winningConditions:
+        if board[condition[0]] == mark and board[condition[1]] == mark and board[condition[2]] == mark:
+            return True
+
+
+def checkdraw():
+    count = 0
+    for key in board.keys():
+        if (board[key] == ':white_large_square:'):
+            count = count + 1
+    if count == 9:
+        return True
+    else:
+        return False
+
+
+def minimax(board, depth, isMaximizing):
+    #maximizing =
+    #minimizing =
+    if checkwinnernoendgame(board, botmark):
+        return 1
+
+    elif checkwinnernoendgame(board, notbotmark):
+        return -1
+
+    elif checkdraw():
+        return 0
+
+    else:
+        pass
+
+    if isMaximizing == True:
+        bestScore = 0
+
+        for key in board.keys():
+            if(board[key] == "white_large_square"):
+                board[key] = botmark
+                score = minimax(board, 0, False)
+                board[key] = ":white_large_square:"
+                if score > bestScore:
+                    bestScore = score
+
+        return bestScore
+
+    elif isMaximizing == False:
+        bestScore = 1000
+        for key in board.keys():
+            if(board[key] == ":white_large_square:"):
+                board[key] = notbotmark
+                score = minimax(board, 0, True)
+                board[key] = ":white_large_square:"
+                if score < bestScore:
+                    bestScore = score
+
+        return bestScore
+
+    else:
+        pass
+
+
+def spaceIsFree(position):
+    if board[position] == ":white_large_square:":
+        return True
+    else:
+        return False
+    
 
 # runs the bot
 client.run(TOKEN)
